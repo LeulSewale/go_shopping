@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://dummyjson.com';
+// Get API base URL from environment variables
+// Use NEXT_PUBLIC_ prefix so it's available on the client side
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://dummyjson.com';
 
 export interface Product {
   id: number;
