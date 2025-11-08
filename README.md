@@ -1,4 +1,4 @@
-# Go Shopping - Modern eCommerce Application
+# Zemenay Gebya - Modern eCommerce Application
 
 A modern, full-featured eCommerce application built with Next.js, TypeScript, Tailwind CSS, and Redux Toolkit. This project demonstrates real-world frontend development practices with a complete product management system.
 

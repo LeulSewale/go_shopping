@@ -6,6 +6,7 @@ import { Heart } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useRouter } from 'next/navigation';
 import { Product } from '@/lib/api';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { toggleFavorite } from '@/store/slices/favoritesSlice';
@@ -16,13 +17,23 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const favorites = useAppSelector((state) => state.favorites.items);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const isFavorite = favorites.some((fav) => fav.id === product.id);
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Check authentication before bookmarking
+    if (!isAuthenticated) {
+      toast.error('You must be logged in to bookmark products');
+      router.push(`/login?returnUrl=/product/${product.id}`);
+      return;
+    }
+    
     dispatch(toggleFavorite(product));
     toast.success(
       isFavorite ? 'Removed from favorites' : 'Added to favorites'

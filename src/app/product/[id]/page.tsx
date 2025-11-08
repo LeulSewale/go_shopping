@@ -34,6 +34,7 @@ export default function ProductDetailPage() {
 
   const dispatch = useAppDispatch();
   const favorites = useAppSelector((state) => state.favorites.items);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const isFavorite = favorites.some((fav) => fav.id === productId);
 
   useEffect(() => {
@@ -58,6 +59,13 @@ export default function ProductDetailPage() {
   }, [productId]);
 
   const handleToggleFavorite = () => {
+    // Check authentication before bookmarking
+    if (!isAuthenticated) {
+      toast.error('You must be logged in to bookmark products');
+      router.push(`/login?returnUrl=/product/${productId}`);
+      return;
+    }
+    
     if (product) {
       dispatch(toggleFavorite(product));
       toast.success(
@@ -67,6 +75,14 @@ export default function ProductDetailPage() {
   };
 
   const handleDelete = async () => {
+    // Check authentication before deleting
+    if (!isAuthenticated) {
+      toast.error('You must be logged in to delete products');
+      setDeleteDialogOpen(false);
+      router.push(`/login?returnUrl=/product/${productId}`);
+      return;
+    }
+    
     try {
       setDeleting(true);
       await productApi.deleteProduct(productId);
@@ -114,11 +130,11 @@ export default function ProductDetailPage() {
     <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
       <Button
         variant="ghost"
-        onClick={() => router.back()}
+        onClick={() => router.push('/')}
         className="mb-4 sm:mb-6 h-9 sm:h-10 hover:bg-accent/50 transition-all duration-200"
       >
         <ArrowLeft className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-        <span className="text-sm sm:text-base">Back</span>
+        <span className="text-sm sm:text-base">Back to Home</span>
       </Button>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
@@ -207,7 +223,14 @@ export default function ProductDetailPage() {
 
             <div className="flex gap-4 pt-4">
               <Button
-                onClick={() => router.push(`/product/${productId}/edit`)}
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    toast.error('You must be logged in to edit products');
+                    router.push(`/login?returnUrl=/product/${productId}/edit`);
+                    return;
+                  }
+                  router.push(`/product/${productId}/edit`);
+                }}
                 className="flex-1 bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 transition-all duration-200 hover:scale-105"
               >
                 <Edit className="mr-2 h-4 w-4" />
@@ -215,7 +238,14 @@ export default function ProductDetailPage() {
               </Button>
               <Button
                 variant="destructive"
-                onClick={() => setDeleteDialogOpen(true)}
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    toast.error('You must be logged in to delete products');
+                    router.push(`/login?returnUrl=/product/${productId}`);
+                    return;
+                  }
+                  setDeleteDialogOpen(true);
+                }}
                 className="flex-1 hover:scale-105 transition-all duration-200 shadow-md"
               >
                 <Trash2 className="mr-2 h-4 w-4" />

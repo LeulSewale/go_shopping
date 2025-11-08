@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { productApi, Category } from '@/lib/api';
+import { useAppSelector } from '@/store/hooks';
 import { toast } from 'sonner';
 
 interface CreateProductModalProps {
@@ -31,7 +32,9 @@ interface CreateProductModalProps {
 
 export default function CreateProductModal({ open, onOpenChange }: CreateProductModalProps) {
   const router = useRouter();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     title: '',
@@ -44,6 +47,14 @@ export default function CreateProductModal({ open, onOpenChange }: CreateProduct
 
   useEffect(() => {
     if (open) {
+      // Check authentication when modal opens
+      if (!isAuthenticated) {
+        toast.error('You must be logged in to create a product');
+        onOpenChange(false);
+        router.push('/login?returnUrl=/');
+        return;
+      }
+      
       const fetchCategories = async () => {
         try {
           const cats = await productApi.getCategories();
@@ -55,9 +66,9 @@ export default function CreateProductModal({ open, onOpenChange }: CreateProduct
       };
       fetchCategories();
     }
-  }, [open]);
+  }, [open, isAuthenticated, onOpenChange, router]);
 
-  // Reset form when modal closes
+  // Reset form and status when modal closes
   useEffect(() => {
     if (!open) {
       setFormData({
@@ -68,19 +79,30 @@ export default function CreateProductModal({ open, onOpenChange }: CreateProduct
         brand: '',
         category: '',
       });
+      setStatus('idle');
     }
   }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check authentication before submitting
+    if (!isAuthenticated) {
+      toast.error('You must be logged in to create a product');
+      onOpenChange(false);
+      router.push('/login?returnUrl=/');
+      return;
+    }
+    
     if (!formData.title || !formData.description || !formData.price || !formData.stock || !formData.brand || !formData.category || formData.category === 'none') {
+      setStatus('error');
       toast.error('Please fill in all fields');
       return;
     }
 
     try {
       setLoading(true);
+      setStatus('idle');
       const product = await productApi.createProduct({
         title: formData.title,
         description: formData.description,
@@ -90,25 +112,41 @@ export default function CreateProductModal({ open, onOpenChange }: CreateProduct
         category: formData.category,
       });
       
+      setStatus('success');
       toast.success(`Product "${product.title}" created successfully!`);
-      onOpenChange(false);
-      // Redirect to home page since DummyJSON doesn't persist created products
-      // The created product won't be accessible via /product/:id
-      router.push('/');
-      router.refresh();
+      
+      // Keep modal open briefly to show success border, then close
+      setTimeout(() => {
+        onOpenChange(false);
+        // Redirect to home page since DummyJSON doesn't persist created products
+        // The created product won't be accessible via /product/:id
+        router.push('/');
+        router.refresh();
+      }, 1000);
     } catch (err: any) {
       console.error('Create product error:', err);
+      setStatus('error');
       let errorMessage = 'Failed to create product';
       
       if (err?.response) {
         // Axios error with response
-        errorMessage = err.response.data?.message || `Request failed with status code ${err.response.status}`;
-        console.error('Error details:', err.response.data);
+        const responseData = err.response.data;
+        if (responseData?.message) {
+          errorMessage = responseData.message;
+        } else if (typeof responseData === 'string') {
+          errorMessage = responseData;
+        } else {
+          errorMessage = `Request failed with status code ${err.response.status}`;
+        }
+        console.error('Error details:', responseData);
       } else if (err?.message) {
         errorMessage = err.message;
       }
       
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        description: 'Please check your input and try again.',
+        duration: 5000,
+      });
     } finally {
       setLoading(false);
     }
@@ -130,7 +168,15 @@ export default function CreateProductModal({ open, onOpenChange }: CreateProduct
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className={`max-w-2xl max-h-[90vh] overflow-y-auto transition-colors duration-300 ${
+          status === 'success' 
+            ? 'border-green-500 border-2' 
+            : status === 'error' 
+            ? 'border-red-500 border-2' 
+            : ''
+        }`}
+      >
         <DialogHeader>
           <DialogTitle>Create New Product</DialogTitle>
           <DialogDescription>

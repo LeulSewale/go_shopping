@@ -161,9 +161,7 @@ export const productApi = {
 export const authApi = {
   // Login
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
-    const response = await api.post('/auth/login', credentials, {
-      withCredentials: true, // Include cookies
-    });
+    const response = await api.post('/auth/login', credentials);
     return response.data;
   },
   
@@ -180,7 +178,6 @@ export const authApi = {
         headers: {
           'Content-Type': 'application/json',
         },
-        withCredentials: true, // Include cookies
       }
     );
     return response.data;

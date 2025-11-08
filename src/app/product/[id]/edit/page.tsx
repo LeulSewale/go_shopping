@@ -9,15 +9,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { productApi, Product } from '@/lib/api';
+import { useAppSelector } from '@/store/hooks';
 import { toast } from 'sonner';
 
 export default function EditProductPage() {
   const params = useParams();
   const router = useRouter();
   const productId = Number(params.id);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [categories, setCategories] = useState<{ slug: string; name: string; url: string }[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
@@ -30,6 +33,13 @@ export default function EditProductPage() {
   });
 
   useEffect(() => {
+    // Check authentication on mount
+    if (!isAuthenticated) {
+      toast.error('You must be logged in to edit products');
+      router.push(`/login?returnUrl=/product/${productId}/edit`);
+      return;
+    }
+    
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -63,18 +73,27 @@ export default function EditProductPage() {
     if (productId) {
       fetchData();
     }
-  }, [productId, router]);
+  }, [productId, router, isAuthenticated]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check authentication before submitting
+    if (!isAuthenticated) {
+      toast.error('You must be logged in to update products');
+      router.push(`/login?returnUrl=/product/${productId}/edit`);
+      return;
+    }
+    
     if (!formData.title || !formData.description || !formData.price || !formData.stock || !formData.brand || !formData.category || formData.category === 'none') {
+      setStatus('error');
       toast.error('Please fill in all fields');
       return;
     }
 
     try {
       setSaving(true);
+      setStatus('idle');
       await productApi.updateProduct(productId, {
         title: formData.title,
         description: formData.description,
@@ -84,11 +103,35 @@ export default function EditProductPage() {
         category: formData.category,
       });
       
+      setStatus('success');
       toast.success('Product updated successfully!');
-      router.push(`/product/${productId}`);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update product';
-      toast.error(errorMessage);
+      
+      // Keep success border visible briefly, then navigate
+      // Use replace to avoid adding to history stack (so back button goes to home)
+      setTimeout(() => {
+        router.replace(`/product/${productId}`);
+      }, 1000);
+    } catch (err: any) {
+      setStatus('error');
+      let errorMessage = 'Failed to update product';
+      
+      if (err?.response) {
+        const responseData = err.response.data;
+        if (responseData?.message) {
+          errorMessage = responseData.message;
+        } else if (typeof responseData === 'string') {
+          errorMessage = responseData;
+        } else {
+          errorMessage = `Request failed with status code ${err.response.status}`;
+        }
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
+      toast.error(errorMessage, {
+        description: 'Please check your input and try again.',
+        duration: 5000,
+      });
     } finally {
       setSaving(false);
     }
@@ -130,7 +173,16 @@ export default function EditProductPage() {
 
         <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Edit Product</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form 
+        onSubmit={handleSubmit} 
+        className={`space-y-6 p-6 rounded-lg border-2 transition-colors duration-300 ${
+          status === 'success' 
+            ? 'border-green-500 bg-green-50 dark:bg-green-950/20' 
+            : status === 'error' 
+            ? 'border-red-500 bg-red-50 dark:bg-red-950/20' 
+            : 'border-border'
+        }`}
+      >
         <div className="space-y-2">
           <Label htmlFor="title">Title *</Label>
           <Input

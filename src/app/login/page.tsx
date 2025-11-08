@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,8 +12,9 @@ import { setCredentials } from '@/store/slices/authSlice';
 import { toast } from 'sonner';
 import { LogIn } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   
@@ -26,9 +27,10 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/');
+      const returnUrl = searchParams.get('returnUrl') || '/';
+      router.replace(returnUrl);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +62,9 @@ export default function LoginPage() {
       }));
       
       toast.success(`Welcome back, ${response.firstName}!`);
-      router.push('/');
+      // Redirect to returnUrl if provided, otherwise go to home
+      const returnUrl = searchParams.get('returnUrl') || '/';
+      router.push(returnUrl);
     } catch (err: any) {
       const errorMessage = err?.response?.data?.message || err?.message || 'Login failed. Please check your credentials.';
       toast.error(errorMessage);
@@ -164,6 +168,29 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 sm:py-16">
+        <div className="w-full max-w-md">
+          <div className="bg-card border border-border rounded-lg shadow-lg p-6 sm:p-8 space-y-6">
+            <div className="text-center space-y-2">
+              <div className="flex justify-center">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <LogIn className="h-6 w-6 text-primary animate-pulse" />
+                </div>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Loading...</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
 

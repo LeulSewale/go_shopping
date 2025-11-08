@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Heart, Home, Plus, Moon, Sun, Search, X, LogIn, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,12 @@ export default function Navigation() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch by only showing auth-dependent UI after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sync search query with URL params
   useEffect(() => {
@@ -86,9 +93,18 @@ export default function Navigation() {
         <div className="flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4">
           <Link 
             href="/" 
-            className="text-lg sm:text-xl md:text-2xl font-bold gradient-text hover:opacity-80 transition-opacity duration-200 truncate flex-shrink-0"
+            className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity duration-200 flex-shrink-0"
           >
-            Go Shopping
+            <Image
+              src="/logo.jpg"
+              alt="Logo"
+              width={32}
+              height={32}
+              className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 rounded-full object-cover flex-shrink-0"
+            />
+            <span className="text-lg sm:text-xl md:text-2xl font-bold gradient-text truncate">
+              Zemenay Gebya
+            </span>
           </Link>
           
           {/* Search Bar - Center */}
@@ -182,7 +198,14 @@ export default function Navigation() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setCreateModalOpen(true)}
+              onClick={() => {
+                if (!auth.isAuthenticated) {
+                  toast.error('You must be logged in to create a product');
+                  router.push('/login?returnUrl=/');
+                  return;
+                }
+                setCreateModalOpen(true);
+              }}
               className="relative transition-all duration-200 hidden sm:flex hover:bg-accent/50"
             >
               <Plus className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -191,7 +214,14 @@ export default function Navigation() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setCreateModalOpen(true)}
+              onClick={() => {
+                if (!auth.isAuthenticated) {
+                  toast.error('You must be logged in to create a product');
+                  router.push('/login?returnUrl=/');
+                  return;
+                }
+                setCreateModalOpen(true);
+              }}
               className="sm:hidden h-9 w-9"
               aria-label="Create Product"
             >
@@ -211,7 +241,7 @@ export default function Navigation() {
             </Link>
             
             {/* Auth Button */}
-            {auth.isAuthenticated && auth.user ? (
+            {mounted && auth.isAuthenticated && auth.user ? (
               <>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -283,7 +313,7 @@ export default function Navigation() {
               aria-label="Toggle theme"
               className="h-9 w-9 sm:h-10 sm:w-10 hover:bg-accent/50 transition-all duration-200 hover:scale-110"
             >
-              {theme === 'dark' ? (
+              {mounted && theme === 'dark' ? (
                 <Sun className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-300" />
               ) : (
                 <Moon className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-300" />

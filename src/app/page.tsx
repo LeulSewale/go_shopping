@@ -172,6 +172,24 @@ function HomeContent() {
   const renderFiltersContent = () => {
     return (
       <>
+        {/* Category Filter */}
+        <div className="space-y-2 pb-4 border-b border-border">
+          <label className="text-sm font-medium">Category</label>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="h-10 text-sm">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat.slug} value={cat.slug}>
+                  {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Sorting Section */}
         <div className="space-y-3 pb-4 border-b border-border">
           <h4 className="text-sm font-semibold">Sort By</h4>
@@ -205,24 +223,6 @@ function HomeContent() {
               </Select>
             </div>
           </div>
-        </div>
-
-        {/* Category Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Category</label>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="h-10 text-sm">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat.slug} value={cat.slug}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Price Range Filter */}

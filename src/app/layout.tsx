@@ -20,8 +20,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "eCommerce Shop",
+  title: "Zemenay Gebya",
   description: "Modern eCommerce shop built with Next.js",
+  icons: {
+    icon: [
+      { url: '/logo.jpg', type: 'image/jpeg' },
+    ],
+    shortcut: '/logo.jpg',
+    apple: '/logo.jpg',
+  },
 };
 
 export default function RootLayout({
@@ -32,6 +39,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/logo.jpg" type="image/jpeg" />
+        <link rel="shortcut icon" href="/logo.jpg" type="image/jpeg" />
+        <link rel="apple-touch-icon" href="/logo.jpg" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -59,7 +69,10 @@ export default function RootLayout({
           <Suspense fallback={
             <nav className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 shadow-sm">
               <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
-                <div className="text-lg sm:text-xl md:text-2xl font-bold gradient-text">Go Shopping</div>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 bg-muted animate-pulse rounded-full"></div>
+                  <div className="text-lg sm:text-xl md:text-2xl font-bold gradient-text">Zemenay Gebya</div>
+                </div>
                 <div className="h-9 w-9 bg-muted animate-pulse rounded"></div>
               </div>
             </nav>
