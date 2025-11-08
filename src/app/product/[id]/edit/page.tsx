@@ -33,7 +33,7 @@ export default function EditProductPage() {
   });
 
   useEffect(() => {
-    // Check authentication on mount
+    // Protect this route - redirect if not logged in
     if (!isAuthenticated) {
       toast.error('You must be logged in to edit products');
       router.push(`/login?returnUrl=/product/${productId}/edit`);
@@ -43,6 +43,7 @@ export default function EditProductPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
+        // Fetch both in parallel to speed things up
         const [productData, cats] = await Promise.all([
           productApi.getProductById(productId),
           productApi.getCategories(),
@@ -50,7 +51,9 @@ export default function EditProductPage() {
         
         setProduct(productData);
         setCategories(cats);
-        // Map product category to slug if it exists in categories, otherwise use as-is
+        
+        // Category matching is a bit tricky - API returns different formats
+        // Try to match by name or slug, fallback to original value
         const categorySlug = cats.find(cat => cat.name.toLowerCase() === productData.category.toLowerCase() || cat.slug === productData.category)?.slug || productData.category;
         
         setFormData({

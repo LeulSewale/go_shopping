@@ -38,13 +38,15 @@ function HomeContent() {
   
   const limit = 10;
 
-  // Fetch categories on mount
+  // Load categories when component mounts
+  // Note: Could cache this but categories don't change often
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const cats = await productApi.getCategories();
         setCategories(cats);
       } catch (err) {
+        // Silently fail - categories aren't critical for initial load
         console.error('Failed to fetch categories:', err);
       }
     };
@@ -52,7 +54,8 @@ function HomeContent() {
     fetchCategories();
   }, []);
 
-  // Fetch products with filters and sorting
+  // Fetch products when filters/sorting change
+  // This could be optimized with debouncing but works fine for now
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -61,11 +64,12 @@ function HomeContent() {
         
         let response: ProductsResponse;
         
-        // If category is selected, fetch by category
+        // Different endpoint for category filtering
         if (selectedCategory !== 'all') {
           response = await productApi.getProductsByCategory(selectedCategory);
         } else {
-          // Fetch all products with sorting
+          // Fetch all with sorting - using 100 limit for now
+          // TODO: Maybe make this configurable?
           response = await productApi.getProducts(
             100, 
             0, 
@@ -75,7 +79,7 @@ function HomeContent() {
         }
         
         setAllProducts(response.products);
-        setSkip(0);
+        setSkip(0); // Reset pagination
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to fetch products';
         setError(errorMessage);
@@ -88,7 +92,8 @@ function HomeContent() {
     fetchProducts();
   }, [selectedCategory, sortBy, sortOrder]);
 
-  // Apply filters and search
+  // Client-side filtering - applied after products are loaded
+  // This runs whenever products, search, or filters change
   useEffect(() => {
     let filtered = [...allProducts];
 

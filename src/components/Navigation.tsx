@@ -36,12 +36,13 @@ export default function Navigation() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Prevent hydration mismatch by only showing auth-dependent UI after mount
+  // Had hydration issues with auth state - this fixes it
+  // TODO: Maybe there's a better way to handle this?
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Sync search query with URL params
+  // Keep search in sync with URL - needed for back button to work
   useEffect(() => {
     const query = searchParams.get('q') || '';
     setSearchQuery(query);
@@ -51,11 +52,11 @@ export default function Navigation() {
     e.preventDefault();
     setIsSearching(true);
     
-    // If not on home page, navigate to home with search query
+    // Navigate to home if we're not there already
     if (pathname !== '/') {
       router.push(`/?q=${encodeURIComponent(searchQuery)}`);
     } else {
-      // Update URL params without navigation
+      // Just update the URL without reloading - smoother UX
       const params = new URLSearchParams(searchParams.toString());
       if (searchQuery.trim()) {
         params.set('q', searchQuery);
@@ -65,6 +66,7 @@ export default function Navigation() {
       router.push(`/?${params.toString()}`, { scroll: false });
     }
     
+    // Small delay to show loading state - feels more responsive
     setTimeout(() => setIsSearching(false), 300);
   };
 

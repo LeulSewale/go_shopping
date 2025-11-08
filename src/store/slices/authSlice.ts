@@ -33,7 +33,9 @@ const authSlice = createSlice({
       state.token = action.payload.token;
       state.refreshToken = action.payload.refreshToken || null;
       state.isAuthenticated = true;
-      // Store in localStorage for persistence
+      
+      // Persist to localStorage so user stays logged in on refresh
+      // Check for window to avoid SSR issues
       if (typeof window !== 'undefined') {
         localStorage.setItem('auth_token', action.payload.token);
         localStorage.setItem('auth_user', JSON.stringify(action.payload.user));

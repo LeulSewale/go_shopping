@@ -119,9 +119,9 @@ export const productApi = {
   },
 
   // Create product
+  // Had issues with relative URLs, so using full URL here
   createProduct: async (data: CreateProductData): Promise<Product> => {
     try {
-      // Use full URL to ensure correct endpoint
       const url = `${API_BASE_URL}/products/add`;
       
       const response = await axios.post(url, data, {
@@ -132,7 +132,7 @@ export const productApi = {
       
       return response.data;
     } catch (error: any) {
-      // Log detailed error for debugging
+      // Log everything for debugging - was getting weird 404s
       console.error('Create product error:', error);
       if (error.response) {
         console.error('Error response:', {

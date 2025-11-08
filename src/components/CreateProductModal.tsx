@@ -115,11 +115,10 @@ export default function CreateProductModal({ open, onOpenChange }: CreateProduct
       setStatus('success');
       toast.success(`Product "${product.title}" created successfully!`);
       
-      // Keep modal open briefly to show success border, then close
+      // Show success border for a moment before closing
+      // Note: DummyJSON doesn't actually save products, so redirect to home
       setTimeout(() => {
         onOpenChange(false);
-        // Redirect to home page since DummyJSON doesn't persist created products
-        // The created product won't be accessible via /product/:id
         router.push('/');
         router.refresh();
       }, 1000);
