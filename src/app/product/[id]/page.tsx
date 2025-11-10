@@ -34,8 +34,10 @@ export default function ProductDetailPage() {
 
   const dispatch = useAppDispatch();
   const favorites = useAppSelector((state) => state.favorites.items);
-  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
-  const isFavorite = favorites.some((fav) => fav.id === productId);
+  const auth = useAppSelector((state) => state.auth);
+  const isAuthenticated = auth.isAuthenticated;
+  const userId = auth.user?.id || null;
+  const isFavorite = favorites.includes(Number(productId));
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -66,12 +68,10 @@ export default function ProductDetailPage() {
       return;
     }
     
-    if (product) {
-      dispatch(toggleFavorite(product));
-      toast.success(
-        isFavorite ? 'Removed from favorites' : 'Added to favorites'
-      );
-    }
+    dispatch(toggleFavorite({ productId: Number(productId), userId }));
+    toast.success(
+      isFavorite ? 'Removed from favorites' : 'Added to favorites'
+    );
   };
 
   const handleDelete = async () => {

@@ -7,19 +7,22 @@ A modern, full-featured eCommerce application built with Next.js, TypeScript, Ta
 ### Core Features
 - **Product Listing Page** - Browse products with pagination, search, and filtering
 - **Product Details Page** - View detailed product information with image gallery
-- **Favorites System** - Save and manage favorite products using Redux
-- **CRUD Operations** - Create, Read, Update, and Delete products
+- **Favorites System** - User-specific favorites with localStorage persistence
+- **CRUD Operations** - Create, Read, Update, and Delete products (requires authentication)
 - **Search Functionality** - Real-time product search with URL parameter sync
 - **Advanced Filtering** - Filter by category, price range, and rating
 - **Sorting** - Sort products by title, price, rating, stock, or brand
+- **Protected Routes** - Authentication required for favorites and product management
 
 ### Bonus Features
-- **Toast Notifications** - Beautiful toast notifications using Sonner
+- **Toast Notifications** - Beautiful toast notifications using Sonner (top-center, color-coded)
 - **Loading States** - Skeleton loaders matching the UI design
 - **Error Handling** - Comprehensive error states with retry options
 - **Responsive Design** - Fully responsive layout for all screen sizes
-- **Dark Mode** - Theme toggle with persistent storage
-- **Authentication** - Mock authentication with login page and token refresh
+- **Dark Mode** - Theme toggle with persistent storage (survives page refresh)
+- **Authentication** - Mock authentication with login page, token refresh, and session persistence
+- **Environment Variables** - Configurable API base URL and app name via `.env` files
+- **User-Specific Data** - Each user has their own favorites list that persists across sessions
 
 ## 🛠️ Tech Stack
 
@@ -57,7 +60,16 @@ yarn install
 pnpm install
 ```
 
-3. Run the development server:
+3. Set up environment variables (optional):
+```bash
+cp .env.example .env
+```
+
+Edit `.env` to configure:
+- `NEXT_PUBLIC_API_BASE_URL` - API base URL (default: https://dummyjson.com)
+- `NEXT_PUBLIC_APP_NAME` - Application name (default: Zemenay Gebya)
+
+4. Run the development server:
 ```bash
 npm run dev
 # or
@@ -66,7 +78,7 @@ yarn dev
 pnpm dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Build for Production
 
@@ -133,17 +145,21 @@ The application uses the [DummyJSON API](https://dummyjson.com/docs/products):
 - Image gallery with thumbnail navigation
 
 ### User Experience
-- Persistent favorites using Redux
-- Dark mode with localStorage persistence
-- Toast notifications for all actions
-- Loading skeletons matching UI design
-- Error states with retry functionality
+- **User-Specific Favorites** - Each user has their own favorites list stored in localStorage
+- **Persistent Favorites** - Favorites persist across page refreshes and logout/login sessions
+- **Dark Mode** - Theme toggle with localStorage persistence (survives page refresh)
+- **Toast Notifications** - Color-coded toast notifications (green for success, red for errors)
+- **Loading Skeletons** - Beautiful skeleton loaders matching UI design
+- **Error States** - Comprehensive error handling with retry functionality
+- **Protected Actions** - Authentication required for favorites, create, update, and delete operations
 
 ### Authentication
-- Login page with form validation
-- JWT token management
-- Automatic token refresh
-- Persistent sessions
+- **Login Page** - Form validation with error handling
+- **JWT Token Management** - Secure token storage in localStorage
+- **Automatic Token Refresh** - Background token refresh to maintain sessions
+- **Persistent Sessions** - User stays logged in across page refreshes
+- **Protected Routes** - Automatic redirect to login with return URL for protected pages
+- **User-Specific Data** - Each user's favorites are isolated and persist per user ID
 
 ## 🔐 Demo Credentials
 
@@ -154,27 +170,83 @@ For testing the login functionality:
 ## 📱 Responsive Design
 
 The application is fully responsive with breakpoints:
-- Mobile: Default (< 640px)
-- Tablet: `sm:` (640px+)
-- Desktop: `md:` (768px+)
-- Large Desktop: `lg:` (1024px+)
-- XL Desktop: `xl:` (1280px+)
-- 2XL Desktop: `2xl:` (1536px+)
+- **Mobile**: Default (< 640px) - Single column layout, mobile navigation
+- **Tablet**: `sm:` (640px+) - Two column grid, expanded navigation
+- **Desktop**: `md:` (768px+) - Three column grid, full navigation
+- **Large Desktop**: `lg:` (1024px+) - Four column grid
+- **XL Desktop**: `xl:` (1280px+) - Five column grid
+- **2XL Desktop**: `2xl:` (1536px+) - Maximum width layout
+
+## 🔒 Authentication & Authorization
+
+### Protected Actions
+
+The following actions require authentication:
+- **Viewing Favorites** - Redirects to login if not authenticated
+- **Adding to Favorites** - Shows error toast and redirects to login
+- **Creating Products** - Requires authentication
+- **Editing Products** - Requires authentication
+- **Deleting Products** - Requires authentication
+
+### Login Flow
+
+1. User attempts protected action → Redirected to `/login?returnUrl=<original-url>`
+2. User logs in → Automatically redirected back to original page
+3. Session persists → User stays logged in across page refreshes
 
 ## 🎯 Key Features Implementation
 
 - **State Management**: Redux Toolkit for global state (favorites, theme, auth)
+- **LocalStorage Persistence**: User-specific favorites stored with key `favorites_${userId}`
 - **URL State**: Search parameters for filters and search query
 - **Optimistic Updates**: Immediate UI feedback with Redux
 - **Error Boundaries**: Comprehensive error handling
 - **Performance**: Code splitting, lazy loading, and optimized images
+- **Hydration Safety**: Proper handling of client-side state to prevent hydration mismatches
+- **Environment Configuration**: Configurable API endpoints and app settings via environment variables
+
+## 🔖 Favorites System
+
+The favorites system is user-specific and persistent:
+
+- **Storage**: Product IDs stored in localStorage with user-specific keys (`favorites_${userId}`)
+- **Persistence**: Favorites persist across page refreshes and logout/login sessions
+- **User Isolation**: Each user has their own favorites list
+- **Authentication Required**: Users must be logged in to add/view favorites
+- **Automatic Loading**: Favorites are automatically loaded when user logs in
+- **Product Fetching**: Product details are fetched on-demand when viewing favorites page
+
+### How It Works
+
+1. User clicks bookmark → Product ID saved to localStorage with user ID key
+2. On page load → Favorites loaded from localStorage for current user
+3. On favorites page → Product details fetched based on saved IDs
+4. On logout → Redux state cleared, but localStorage preserved
+5. On login → Favorites automatically restored from localStorage
 
 ## 📝 Scripts
 
-- `npm run dev` - Start development server
+- `npm run dev` - Start development server with Turbopack
 - `npm run build` - Build for production
 - `npm start` - Start production server
 - `npm run lint` - Run ESLint
+
+## 🔧 Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```env
+# API Configuration
+NEXT_PUBLIC_API_BASE_URL=https://dummyjson.com
+
+# Application Configuration
+NEXT_PUBLIC_APP_NAME=Zemenay Gebya
+
+# Environment
+NODE_ENV=development
+```
+
+See `.env.example` for reference.
 
 ## 🚢 Deployment
 
@@ -194,12 +266,22 @@ This project is private and for educational purposes.
 ## 👨‍💻 Development
 
 Built with modern React patterns and best practices:
-- Server and Client Components
-- TypeScript for type safety
-- Tailwind CSS for styling
-- Redux Toolkit for state management
-- Axios for API calls
-- Next.js App Router for routing
+- **Server and Client Components** - Optimal rendering strategy
+- **TypeScript** - Full type safety throughout the application
+- **Tailwind CSS** - Utility-first CSS framework
+- **Redux Toolkit** - Modern Redux with simplified API
+- **Axios** - HTTP client for API requests
+- **Next.js App Router** - Latest Next.js routing system
+- **Shadcn UI** - Accessible component library
+- **Sonner** - Toast notification system
+
+## 📚 Additional Resources
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Redux Toolkit Documentation](https://redux-toolkit.js.org/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [Shadcn UI Components](https://ui.shadcn.com/)
+- [DummyJSON API Documentation](https://dummyjson.com/docs)
 
 ---
 

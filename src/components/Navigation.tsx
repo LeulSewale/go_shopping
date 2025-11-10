@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { toggleTheme } from '@/store/slices/themeSlice';
 import { logout } from '@/store/slices/authSlice';
+import { clearFavoritesState } from '@/store/slices/favoritesSlice';
 import { Badge } from '@/components/ui/badge';
 import CreateProductModal from '@/components/CreateProductModal';
 import {
@@ -79,6 +80,8 @@ export default function Navigation() {
 
   const handleLogout = () => {
     dispatch(logout());
+    // Clear favorites from Redux state only - keep in localStorage so they persist when user logs back in
+    dispatch(clearFavoritesState());
     toast.success('Logged out successfully');
     router.push('/');
   };
@@ -168,7 +171,7 @@ export default function Navigation() {
                   >
                     <Icon className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span className="hidden md:inline">{item.label}</span>
-                    {item.href === '/favorites' && favorites.length > 0 && (
+                    {mounted && item.href === '/favorites' && favorites.length > 0 && (
                       <Badge className="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 flex items-center justify-center text-[10px] sm:text-xs bg-primary/20 text-primary font-semibold">
                         {favorites.length}
                       </Badge>
@@ -186,7 +189,7 @@ export default function Navigation() {
                     aria-label={item.label}
                   >
                     <Icon className="h-4 w-4" />
-                    {item.href === '/favorites' && favorites.length > 0 && (
+                    {mounted && item.href === '/favorites' && favorites.length > 0 && (
                       <Badge className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground font-semibold">
                         {favorites.length}
                       </Badge>

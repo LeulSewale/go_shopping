@@ -20,8 +20,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const favorites = useAppSelector((state) => state.favorites.items);
-  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
-  const isFavorite = favorites.some((fav) => fav.id === product.id);
+  const auth = useAppSelector((state) => state.auth);
+  const isAuthenticated = auth.isAuthenticated;
+  const userId = auth.user?.id || null;
+  const isFavorite = favorites.includes(product.id);
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -34,7 +36,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       return;
     }
     
-    dispatch(toggleFavorite(product));
+    dispatch(toggleFavorite({ productId: product.id, userId }));
     toast.success(
       isFavorite ? 'Removed from favorites' : 'Added to favorites'
     );
